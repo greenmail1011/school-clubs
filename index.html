@@ -1,0 +1,544 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>社團申請時程 ─ 新竹市</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      background: #fff;
+      color: #222;
+      font-family: -apple-system, 'Noto Sans TC', '微軟正黑體', sans-serif;
+      font-size: 15px;
+      line-height: 1.7;
+    }
+
+    header {
+      border-bottom: 2px solid #222;
+      padding: 22px 28px 16px;
+    }
+    header h1 { font-size: 1.3rem; font-weight: 700; }
+    header p   { color: #666; font-size: .85rem; margin-top: 4px; }
+    .today-note {
+      display: inline-block; margin-top: 7px;
+      font-size: .77rem; color: #999;
+      border: 1px solid #ddd; border-radius: 3px; padding: 2px 10px;
+    }
+
+    .filters {
+      display: flex; flex-wrap: wrap; gap: 6px;
+      padding: 10px 28px; border-bottom: 1px solid #e8e8e8;
+      position: sticky; top: 0; z-index: 100; background: #fff;
+    }
+    .pill {
+      cursor: pointer; border: 1px solid #ccc; border-radius: 3px;
+      padding: 3px 12px; font-size: .77rem; background: #fff;
+      color: #555; transition: all .1s; user-select: none;
+    }
+    .pill.active-pill { background: #222; color: #fff; border-color: #222; }
+    .pill.inactive    { opacity: .3; }
+    .pill:hover       { opacity: 1 !important; background: #f5f5f5; }
+    .pill.active-pill:hover { background: #444; }
+
+    main { max-width: 680px; margin: 0 auto; padding: 24px 28px 60px; }
+
+    /* 倒數 */
+    .countdown-row {
+      display: flex; flex-wrap: wrap; gap: 28px;
+      margin-bottom: 24px; padding-bottom: 20px;
+      border-bottom: 1px solid #eee;
+    }
+    .countdown-item { text-align: center; }
+    .countdown-num        { font-size: 1.9rem; font-weight: 700; line-height: 1; color: #222; }
+    .countdown-num.urgent { color: #c0392b; }
+    .countdown-unit       { font-size: .69rem; color: #999; margin-top: 2px; }
+
+    /* 現在 */
+    .now-row {
+      display: flex; align-items: center; gap: 8px;
+      font-size: .78rem; color: #c0392b; font-weight: 600;
+      margin-bottom: 12px;
+    }
+    .now-line { flex: 1; height: 1px; background: #c0392b; opacity: .35; }
+
+    /* 月份 */
+    .month-label {
+      font-size: .7rem; font-weight: 700; color: #999;
+      letter-spacing: .1em; text-transform: uppercase;
+      display: flex; align-items: center; gap: 8px;
+      margin: 18px 0 5px;
+    }
+    .month-label::after { content: ''; flex: 1; height: 1px; background: #eee; }
+    .month-label.hot    { color: #c0392b; }
+
+    /* 事項 */
+    .event { margin-bottom: 3px; transition: opacity .2s; }
+    .event.hidden { display: none; }
+
+    .evt-row {
+      width: 100%; background: #fff;
+      border: 1px solid #e8e8e8; border-radius: 4px;
+      overflow: hidden; cursor: pointer;
+      transition: border-color .1s;
+    }
+    .evt-row:hover { border-color: #aaa; }
+
+    /* 重要事項 ── 左紅線 + 淡紅底 */
+    .evt-row.important {
+      border-left: 3px solid #c0392b;
+      background: #fffafa;
+    }
+    .evt-row.important .evt-title-sm { color: #c0392b; font-weight: 600; }
+
+    .evt-summary {
+      display: flex; align-items: baseline;
+      gap: 10px; padding: 7px 13px; flex-wrap: wrap;
+    }
+    .evt-date     { font-size: .75rem; color: #999; white-space: nowrap; min-width: 90px; flex-shrink: 0; }
+    .evt-title-sm { font-size: .88rem; flex: 1; min-width: 130px; }
+    .evt-school   { font-size: .7rem; color: #bbb; white-space: nowrap; }
+    .evt-status   { font-size: .67rem; color: #ccc; white-space: nowrap; }
+    .chevron      { font-size: .6rem; color: #ccc; margin-left: auto; flex-shrink: 0; transition: transform .15s; }
+    .evt-row.open .chevron { transform: rotate(180deg); }
+
+    .evt-detail {
+      display: none; padding: 7px 13px 11px;
+      font-size: .81rem; color: #555; line-height: 1.75;
+      border-top: 1px solid #f0f0f0; background: #fafafa;
+    }
+    .evt-row.open .evt-detail { display: block; }
+    .evt-detail a { color: #2563eb; font-size: .77rem; text-decoration: none; }
+    .evt-detail a:hover { text-decoration: underline; }
+
+    /* 文件 */
+    .docs-section { margin-top: 32px; border-top: 2px solid #222; padding-top: 16px; }
+    .docs-section > h2 { font-size: .95rem; font-weight: 700; margin-bottom: 12px; }
+    .docs-school-block { margin-bottom: 18px; }
+    .docs-school-block.hidden { display: none; }
+    .docs-school-label {
+      font-size: .7rem; font-weight: 700; color: #999;
+      letter-spacing: .07em; text-transform: uppercase; margin-bottom: 5px;
+    }
+    .doc-item {
+      display: flex; align-items: center; gap: 10px;
+      padding: 7px 0; border-bottom: 1px solid #f0f0f0; font-size: .84rem;
+    }
+    .doc-item:last-child { border-bottom: none; }
+    .doc-name { flex: 1; color: #333; }
+    .doc-download {
+      border: 1px solid #ccc; border-radius: 3px; padding: 3px 11px;
+      font-size: .73rem; color: #444; text-decoration: none; white-space: nowrap;
+      transition: background .1s;
+    }
+    .doc-download:hover { background: #f5f5f5; }
+
+    /* 聯絡 */
+    .contact-section { margin-top: 28px; border-top: 1px solid #eee; padding-top: 16px; }
+    .contact-section h2 {
+      font-size: .7rem; font-weight: 700; color: #999;
+      letter-spacing: .07em; text-transform: uppercase; margin-bottom: 10px;
+    }
+    .contact-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(155px,1fr)); gap: 8px; }
+    .contact-card { border: 1px solid #e8e8e8; border-radius: 4px; padding: 11px; }
+    .contact-card h3 { font-size: .86rem; font-weight: 700; margin-bottom: 5px; }
+    .contact-card p  { font-size: .74rem; color: #777; margin-bottom: 2px; }
+    .contact-card a  { font-size: .74rem; color: #2563eb; text-decoration: none; display: block; margin-top: 3px; }
+    .contact-card a:hover { text-decoration: underline; }
+
+    footer {
+      text-align: center; padding: 18px;
+      font-size: .71rem; color: #bbb;
+      border-top: 1px solid #eee; margin-top: 16px;
+    }
+
+    @media(max-width:480px){
+      header, main, .filters { padding-left: 16px; padding-right: 16px; }
+    }
+  </style>
+</head>
+<body>
+
+<header>
+  <h1>115學年度上學期　社團申請時程</h1>
+  <p>新竹市 ・ 香山國小 ・ 民富國小 ・ 頂埔國小 ・ 關東國小</p>
+  <span class="today-note">今天：2026年5月14日（114學年度下學期進行中）</span>
+</header>
+
+<div class="filters">
+  <div class="pill active-pill" data-school="all"       onclick="filterSchool('all',this)">全部</div>
+  <div class="pill"             data-school="xiangshan" onclick="filterSchool('xiangshan',this)">香山國小</div>
+  <div class="pill"             data-school="minfu"     onclick="filterSchool('minfu',this)">民富國小</div>
+  <div class="pill"             data-school="dingpu"    onclick="filterSchool('dingpu',this)">頂埔國小</div>
+  <div class="pill"             data-school="guandong"  onclick="filterSchool('guandong',this)">關東國小</div>
+</div>
+
+<main>
+
+  <div class="countdown-row">
+    <div class="countdown-item">
+      <div class="countdown-num urgent" id="days-to-apply">—</div>
+      <div class="countdown-unit">天到香山申請截止（5/29）</div>
+    </div>
+    <div class="countdown-item">
+      <div class="countdown-num" id="days-to-summer">—</div>
+      <div class="countdown-unit">天到暑假</div>
+    </div>
+    <div class="countdown-item">
+      <div class="countdown-num" id="days-to-school">—</div>
+      <div class="countdown-unit">天到開學</div>
+    </div>
+  </div>
+
+  <div class="now-row">
+    <div class="now-line"></div>▶ 現在：2026年5月14日<div class="now-line"></div>
+  </div>
+
+  <!-- 5月 → 現在！ -->
+  <div class="month-label hot">2026 年 5 月　← 截止就在眼前</div>
+  <div class="event" data-school="xiangshan">
+    <div class="evt-row important" onclick="toggleCard(this)">
+      <div class="evt-summary">
+        <span class="evt-date">5/18～5/29</span>
+        <span class="evt-title-sm">香山國小 115學年場地租借型社團申請收件</span>
+        <span class="evt-school">香山國小</span>
+        <span class="evt-status">官方公告</span>
+        <span class="chevron">▼</span>
+      </div>
+      <div class="evt-detail">
+        <strong>逾期不受理！5/29（週五）截止。</strong><br><br>
+        需繳交 4 份文件至學務處：<br>
+        1. 課後社團上課時間<br>
+        2. 校外老師入校協助教學申請表<br>
+        3. 社團企劃書<br>
+        4. 校外人士入校須知<br><br>
+        注意：學校公告「不建議需要大範圍場地之球類運動申請」（通常因報名人數不足或無場地無法開班），請評估是否適用。<br><br>
+        聯絡：學務處 03-5386164#2112<br>
+        <a href="https://www.hhps.hc.edu.tw/nss/main/freeze/5a9759adef37531ea27bf1b0/a6IOv2s8790/6a0167fb74bdc8a2bf6e6c9e?vector=private&static=false" target="_blank">官方公告 →</a>
+      </div>
+    </div>
+  </div>
+
+  <!-- 6月 -->
+  <div class="month-label">2026 年 6 月</div>
+  <div class="event" data-school="general">
+    <div class="evt-row" onclick="toggleCard(this)">
+      <div class="evt-summary">
+        <span class="evt-date">6/30（週二）</span>
+        <span class="evt-title-sm">114學年度下學期結業式</span>
+        <span class="evt-school">全體</span>
+        <span class="chevron">▼</span>
+      </div>
+      <div class="evt-detail">
+        114學年度正式結束，隔天（7/1）暑假開始。<br>
+        <a href="https://pleyschool.org/blog/calendar-summervacation-wintervacation/" target="_blank">來源：玩轉學校 114學年度行事曆</a>
+      </div>
+    </div>
+  </div>
+
+  <!-- 已確認 → 移至5月 -->
+
+  <div class="event" data-school="general">
+    <div class="evt-row" onclick="toggleCard(this)">
+      <div class="evt-summary">
+        <span class="evt-date">7/1（週三）</span>
+        <span class="evt-title-sm">暑假開始（共62天）</span>
+        <span class="evt-school">全體</span>
+        <span class="chevron">▼</span>
+      </div>
+      <div class="evt-detail">暑假至8月31日（共62天）。部分學校在暑假前就會公告下學期社團簡章，請留意聯絡簿或官網。</div>
+    </div>
+  </div>
+
+  <!-- 8月 -->
+  <div class="month-label hot">2026 年 8 月　← 提前確認！</div>
+  <div class="event" data-school="general">
+    <div class="evt-row important" onclick="toggleCard(this)">
+      <div class="evt-summary">
+        <span class="evt-date">8月下旬</span>
+        <span class="evt-title-sm">主動致電各校學務處確認報名方式</span>
+        <span class="evt-school">全體</span>
+        <span class="evt-status">建議</span>
+        <span class="chevron">▼</span>
+      </div>
+      <div class="evt-detail">
+        距開學只剩1～2週，強烈建議主動詢問，避免錯過。<br>
+        香山：03-5386164 ／ 民富：03-5222102 ／ 頂埔：03-5386204 ／ 關東：03-5775645
+      </div>
+    </div>
+  </div>
+  <div class="event" data-school="general">
+    <div class="evt-row" onclick="toggleCard(this)">
+      <div class="evt-summary">
+        <span class="evt-date">8/31（週一）</span>
+        <span class="evt-title-sm">暑假結束</span>
+        <span class="evt-school">全體</span>
+        <span class="chevron">▼</span>
+      </div>
+      <div class="evt-detail"><a href="https://pleyschool.org/blog/calendar-summervacation-wintervacation/" target="_blank">來源：玩轉學校 114學年度行事曆</a></div>
+    </div>
+  </div>
+
+  <!-- 9月 -->
+  <div class="month-label hot">2026 年 9 月　← 報名集中於此</div>
+  <div class="event" data-school="general">
+    <div class="evt-row" onclick="toggleCard(this)">
+      <div class="evt-summary">
+        <span class="evt-date">9/1（週二）</span>
+        <span class="evt-title-sm">115學年度上學期開學日</span>
+        <span class="evt-school">全體</span>
+        <span class="evt-status">預計</span>
+        <span class="chevron">▼</span>
+      </div>
+      <div class="evt-detail">各校開學（預計），實際以教育部及新竹市教育局公告為準。</div>
+    </div>
+  </div>
+  <div class="event" data-school="guandong">
+    <div class="evt-row important" onclick="toggleCard(this)">
+      <div class="evt-summary">
+        <span class="evt-date">約 9/3～9/4</span>
+        <span class="evt-title-sm">課後社團網路報名開始</span>
+        <span class="evt-school">關東國小</span>
+        <span class="evt-status">推估</span>
+        <span class="chevron">▼</span>
+      </div>
+      <div class="evt-detail">
+        依114上學期模式，開學後約3–4天開放，僅接受網路報名。<br>
+        <a href="https://sites.google.com/ktps-www.hc.edu.tw/ktps25-club" target="_blank">關東國小課後社團頁面</a>
+      </div>
+    </div>
+  </div>
+  <div class="event" data-school="xiangshan">
+    <div class="evt-row" onclick="toggleCard(this)">
+      <div class="evt-summary">
+        <span class="evt-date">9月上旬</span>
+        <span class="evt-title-sm">課後社團報名</span>
+        <span class="evt-school">香山國小</span>
+        <span class="evt-status">待確認</span>
+        <span class="chevron">▼</span>
+      </div>
+      <div class="evt-detail">具體日期待確認，建議8月底前主動詢問。　03-5386164</div>
+    </div>
+  </div>
+  <div class="event" data-school="minfu">
+    <div class="evt-row" onclick="toggleCard(this)">
+      <div class="evt-summary">
+        <span class="evt-date">9月上旬</span>
+        <span class="evt-title-sm">課後社團報名</span>
+        <span class="evt-school">民富國小</span>
+        <span class="evt-status">待確認</span>
+        <span class="chevron">▼</span>
+      </div>
+      <div class="evt-detail">具體日期待確認，建議8月底前主動詢問。　03-5222102</div>
+    </div>
+  </div>
+  <div class="event" data-school="dingpu">
+    <div class="evt-row" onclick="toggleCard(this)">
+      <div class="evt-summary">
+        <span class="evt-date">9月上旬</span>
+        <span class="evt-title-sm">課後社團報名</span>
+        <span class="evt-school">頂埔國小</span>
+        <span class="evt-status">待確認</span>
+        <span class="chevron">▼</span>
+      </div>
+      <div class="evt-detail">115上學期課程尚未公告，預計暑假後公布。　03-5386204</div>
+    </div>
+  </div>
+  <div class="event" data-school="guandong">
+    <div class="evt-row" onclick="toggleCard(this)">
+      <div class="evt-summary">
+        <span class="evt-date">約 9/5（23:59）</span>
+        <span class="evt-title-sm">課後社團報名截止</span>
+        <span class="evt-school">關東國小</span>
+        <span class="evt-status">推估</span>
+        <span class="chevron">▼</span>
+      </div>
+      <div class="evt-detail">依114上學期記錄，開學後第4–5天截止，截止後不接受補報名。</div>
+    </div>
+  </div>
+  <div class="event" data-school="guandong">
+    <div class="evt-row" onclick="toggleCard(this)">
+      <div class="evt-summary">
+        <span class="evt-date">約 9/7～9/9</span>
+        <span class="evt-title-sm">加退選時間</span>
+        <span class="evt-school">關東國小</span>
+        <span class="evt-status">推估</span>
+        <span class="chevron">▼</span>
+      </div>
+      <div class="evt-detail">報名截止後約1–3個工作日。若未達開班人數或已額滿，可致電老師改選。</div>
+    </div>
+  </div>
+  <div class="event" data-school="guandong">
+    <div class="evt-row" onclick="toggleCard(this)">
+      <div class="evt-summary">
+        <span class="evt-date">約 9/12～9/16</span>
+        <span class="evt-title-sm">繳費通知單發放</span>
+        <span class="evt-school">關東國小</span>
+        <span class="evt-status">推估</span>
+        <span class="chevron">▼</span>
+      </div>
+      <div class="evt-detail">確定開課的社團，老師約在9/12或9/16發放繳費通知單。逾期未繳視同放棄。</div>
+    </div>
+  </div>
+
+  <!-- 10月 -->
+  <div class="month-label">2026 年 10 月</div>
+  <div class="event" data-school="general">
+    <div class="evt-row" onclick="toggleCard(this)">
+      <div class="evt-summary">
+        <span class="evt-date">10/9～10/11</span>
+        <span class="evt-title-sm">國慶日連假（3天）</span>
+        <span class="evt-school">全體</span>
+        <span class="chevron">▼</span>
+      </div>
+      <div class="evt-detail">社團依各校公告停課或照常上課。</div>
+    </div>
+  </div>
+  <div class="event" data-school="general">
+    <div class="evt-row" onclick="toggleCard(this)">
+      <div class="evt-summary">
+        <span class="evt-date">10月起</span>
+        <span class="evt-title-sm">各社團正式上課（穩定期）</span>
+        <span class="evt-school">全體</span>
+        <span class="chevron">▼</span>
+      </div>
+      <div class="evt-detail">上學期社團通常從10月起進入穩定上課節奏，持續至1月結業前。</div>
+    </div>
+  </div>
+
+  <!-- 1月 -->
+  <div class="month-label">2027 年 1 月</div>
+  <div class="event" data-school="general">
+    <div class="evt-row" onclick="toggleCard(this)">
+      <div class="evt-summary">
+        <span class="evt-date">1月上旬</span>
+        <span class="evt-title-sm">上學期結業 / 下學期預告</span>
+        <span class="evt-school">全體</span>
+        <span class="chevron">▼</span>
+      </div>
+      <div class="evt-detail">上學期結業，進入寒假。各校可能在此時公告下學期社團簡章，請留意聯絡簿或校網。</div>
+    </div>
+  </div>
+
+  <!-- 聯絡 -->
+  <div class="contact-section">
+    <h2>各校聯絡資訊</h2>
+    <div class="contact-grid">
+      <div class="contact-card">
+        <h3>香山國小</h3>
+        <p>03-5386164</p>
+        <p>香山區牛埔東路260號</p>
+        <a href="https://www.hhps.hc.edu.tw/" target="_blank">官方網站 →</a>
+      </div>
+      <div class="contact-card">
+        <h3>民富國小</h3>
+        <p>03-5222102</p>
+        <p>北區西大路561號</p>
+        <a href="https://www.mfps.hc.edu.tw/" target="_blank">官方網站 →</a>
+      </div>
+      <div class="contact-card">
+        <h3>頂埔國小</h3>
+        <p>03-5386204</p>
+        <p>香山區頂埔路23號</p>
+        <a href="https://www.dpps.hc.edu.tw/" target="_blank">官方網站 →</a>
+      </div>
+      <div class="contact-card">
+        <h3>關東國小</h3>
+        <p>03-5775645#202</p>
+        <p>東區關東路53號</p>
+        <a href="https://sites.google.com/ktps-www.hc.edu.tw/ktps25-club" target="_blank">課後社團頁面 →</a>
+      </div>
+    </div>
+  </div>
+
+  <!-- 文件 -->
+  <div class="docs-section">
+    <h2>申請文件下載</h2>
+
+    <div class="docs-school-block" data-school="xiangshan">
+      <div class="docs-school-label">香山國小 ── 115學年上學期　範本（學校提供，請填寫後送交）</div>
+      <div class="doc-item">
+        <span class="doc-name">1. 115學年度上學期課後社團上課時間</span>
+        <a class="doc-download" href="https://www.hhps.hc.edu.tw/uploads/1778477051187oIYL6MJ1.docx" target="_blank">下載範本</a>
+      </div>
+      <div class="doc-item">
+        <span class="doc-name">2. 校外老師入校協助教學申請表</span>
+        <a class="doc-download" href="https://www.hhps.hc.edu.tw/uploads/17784770511869V4JghuY.doc" target="_blank">下載範本</a>
+      </div>
+      <div class="doc-item">
+        <span class="doc-name">3. 社團企劃書</span>
+        <a class="doc-download" href="https://www.hhps.hc.edu.tw/uploads/1778477051199NEYTN4Zn.doc" target="_blank">下載範本</a>
+      </div>
+      <div class="doc-item">
+        <span class="doc-name">4. 校外人士入校須知</span>
+        <a class="doc-download" href="https://www.hhps.hc.edu.tw/uploads/1778477051190wM1l8JU5.doc" target="_blank">下載範本</a>
+      </div>
+    </div>
+
+    <div class="docs-school-block" data-school="xiangshan">
+      <div class="docs-school-label">香山國小 ── AI足球無人機社（114學年下學期　已填妥版）</div>
+      <div class="doc-item">
+        <span class="doc-name">1. 課後社團上課時間</span>
+        <a class="doc-download" href="computer:///Users/harrypotter/Desktop/社團課系統/114下學期申請文件/1.114學年度下學期課後社團上課時間.docx">下載</a>
+      </div>
+      <div class="doc-item">
+        <span class="doc-name">2. 校外老師入校協助教學申請表</span>
+        <a class="doc-download" href="computer:///Users/harrypotter/Desktop/社團課系統/114下學期申請文件/2.114學年度下學期校外老師入校協助教學申請表.docx">下載</a>
+      </div>
+      <div class="doc-item">
+        <span class="doc-name">3. 香山國小社團企劃書</span>
+        <a class="doc-download" href="computer:///Users/harrypotter/Desktop/社團課系統/114下學期申請文件/3.114學年度下學期香山國小社團企劃書.docx">下載</a>
+      </div>
+      <div class="doc-item">
+        <span class="doc-name">4. 校外人士入校須知</span>
+        <a class="doc-download" href="computer:///Users/harrypotter/Desktop/社團課系統/114下學期申請文件/4.校外人士入校須知.docx">下載</a>
+      </div>
+    </div>
+
+    <div class="docs-school-block" data-school="minfu">
+      <div class="docs-school-label">民富國小 ── 翻轉足球無人機社</div>
+      <div class="doc-item">
+        <span class="doc-name">附件1：師資簡介（李鉢卿）</span>
+        <a class="doc-download" href="computer:///Users/harrypotter/Desktop/社團課系統/115上學期申請文件/民富國小/附件1-師資簡介（李鉢卿）.docx">下載</a>
+      </div>
+      <div class="doc-item">
+        <span class="doc-name">附件2：課程計畫（AI足球無人機x翻轉營）</span>
+        <a class="doc-download" href="computer:///Users/harrypotter/Desktop/社團課系統/115上學期申請文件/民富國小/附件2-課程計畫（AI足球無人機x翻轉營）.docx">下載</a>
+      </div>
+    </div>
+
+  </div>
+
+</main>
+
+<footer>最後更新：2026年5月14日　｜　實際日期以各校正式通知為準</footer>
+
+<script>
+  function toggleCard(card) { card.classList.toggle('open'); }
+
+  function filterSchool(s, el) {
+    document.querySelectorAll('.pill').forEach(p => {
+      p.classList.remove('active-pill');
+      p.classList.toggle('inactive', s !== 'all' && p.dataset.school !== s && p.dataset.school !== 'all');
+    });
+    el.classList.add('active-pill');
+    el.classList.remove('inactive');
+    document.querySelectorAll('.event').forEach(ev =>
+      ev.classList.toggle('hidden', s !== 'all' && ev.dataset.school !== s && ev.dataset.school !== 'general')
+    );
+    document.querySelectorAll('.docs-school-block').forEach(b =>
+      b.classList.toggle('hidden', s !== 'all' && b.dataset.school !== s)
+    );
+  }
+
+  function calcDays(iso) {
+    return Math.max(0, Math.round((new Date(iso) - new Date('2026-05-14')) / 86400000));
+  }
+  document.getElementById('days-to-apply').textContent  = calcDays('2026-05-29');
+  document.getElementById('days-to-summer').textContent = calcDays('2026-07-01');
+  document.getElementById('days-to-school').textContent = calcDays('2026-09-01');
+</script>
+
+</body>
+</html>
